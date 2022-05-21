@@ -12,28 +12,6 @@ public class Main {
 
     public static void main(String[] args) {
         mainProcess();
-
-//        Employee emp1 = new Employee();
-//        emp1.setName("One");
-//        emp1.setDateOfBirth("19/10/96");
-//        emp1.setHourlyRate("20.5");
-//
-//        Employee emp2 = new Employee();
-//        emp2.setName("Two");
-//        emp2.setDateOfBirth("19/10/92");
-//        emp2.setHourlyRate("25");
-//
-//        Employee emp3 = new Employee();
-//        emp3.setName("Three");
-//        emp3.setDateOfBirth("22/10/92");
-//        emp3.setHourlyRate("23");
-//
-//        EmployeeDAO employeeDAO = new EmployeeDAO();
-//        employeeDAO.addEmployee(employees, emp1);
-//        employeeDAO.addEmployee(employees, emp2);
-//        employeeDAO.addEmployee(employees, emp3);
-//
-//        System.out.println(employees);
     }
 
     static void mainProcess() {
@@ -70,6 +48,9 @@ public class Main {
             case (3):
                 break;
             case (4):
+                System.out.println("Saving data...");
+                System.out.println("Done, bye bye");
+                FileHandler.writeEmployees(employees);
                 return;
             default:
                 break;
