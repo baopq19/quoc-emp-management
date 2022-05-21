@@ -1,6 +1,4 @@
 package com.quocvuong.utils;
-
-import java.math.BigDecimal;
 import java.util.Scanner;
 
 public class InputHandler {
@@ -19,7 +17,6 @@ public class InputHandler {
 
     public static String getStringInput() {
         Scanner scanner = new Scanner(System.in);
-        String userInputString = scanner.nextLine();
-        return userInputString;
+        return scanner.nextLine();
     }
 }

@@ -47,7 +47,7 @@ public class Employee {
         return yearOfBirth;
     }
 
-    public void setYearOfBirth(Integer dateOfBirth) {
+    public void setYearOfBirth(Integer yearOfBirth) {
         this.yearOfBirth = yearOfBirth;
     }
 
@@ -63,12 +63,10 @@ public class Employee {
 
     @Override
     public String toString() {
-        return "Employee{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", hourlyRate='" + hourlyRate + '\'' +
-                ", yearOfBirth='" + yearOfBirth + '\'' +
-                '}';
+        return "Employee (" + id +"): " +
+                " name: " + name +
+                ", hourly rate: " + hourlyRate +
+                ", year of birth: " + yearOfBirth;
     }
 
     public String toSaveString() {
