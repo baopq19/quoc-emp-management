@@ -1,43 +1,26 @@
 package com.quocvuong;
 
 import com.quocvuong.dao.EmployeeDAO;
+import com.quocvuong.dao.PaymentDAO;
 import com.quocvuong.model.Employee;
+import com.quocvuong.model.Payment;
 import com.quocvuong.utils.Constant;
 import com.quocvuong.utils.FileHandler;
 import com.quocvuong.utils.InputHandler;
 
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
+import java.util.stream.Collectors;
 
 public class Main {
     private static final EmployeeDAO employeeDAO = new EmployeeDAO();
+    private static final PaymentDAO paymentDAO = new PaymentDAO();
     private static List<Employee> employees = new ArrayList<>();
+    private static List<Payment> payments = new ArrayList<>();
 
     public static void main(String[] args) {
         mainProcess();
-
-//        Employee emp1 = new Employee();
-//        emp1.setName("One");
-//        emp1.setDateOfBirth("19/10/96");
-//        emp1.setHourlyRate("20.5");
-//
-//        Employee emp2 = new Employee();
-//        emp2.setName("Two");
-//        emp2.setDateOfBirth("19/10/92");
-//        emp2.setHourlyRate("25");
-//
-//        Employee emp3 = new Employee();
-//        emp3.setName("Three");
-//        emp3.setDateOfBirth("22/10/92");
-//        emp3.setHourlyRate("23");
-//
-//        EmployeeDAO employeeDAO = new EmployeeDAO();
-//        employeeDAO.addEmployee(employees, emp1);
-//        employeeDAO.addEmployee(employees, emp2);
-//        employeeDAO.addEmployee(employees, emp3);
-//
-//        System.out.println(employees);
     }
 
     static void mainProcess() {
@@ -46,7 +29,6 @@ public class Main {
 
         // Keep running till user choose to exit
         do {
-            System.out.println("---------------------------------");
             printMenu();
             // Keep asking till user input a valid selection
             do {
@@ -69,7 +51,7 @@ public class Main {
                     break;
                 case (4):
                     System.out.println(Constant.OPT_4);
-                    System.out.println("Developing...");
+                    handleShowPaymentHistory();
                     break;
                 case (5):
                     System.out.println(Constant.OPT_5);
@@ -86,11 +68,13 @@ public class Main {
     static void loadData() {
         System.out.println("Loading data...");
         employees = FileHandler.readEmployees();
+        payments = FileHandler.readPayments();
         System.out.println("Loading success.");
         System.out.println("You currently have " + employees.size() + " employees in database");
     }
 
     static void printMenu() {
+        System.out.println("---------------------------------");
         System.out.println(Constant.OPT_1);
         System.out.println(Constant.OPT_2);
         System.out.println(Constant.OPT_3);
@@ -122,7 +106,7 @@ public class Main {
             return;
         }
 
-        // If its good
+        // If employee exist
         int inpId;
         Employee emp = null;
 
@@ -141,19 +125,102 @@ public class Main {
 
         // Found the user
         System.out.println("Found user: " + emp);
-        System.out.print("Hours " + emp.getName() + " has worked (hourly rate $" + emp.getHourlyRate() +"): ");
-        int workHours = InputHandler.getPositiveIntegerInput();
+
+        int year;
+        int month;
+        int currentYear = Year.now().getValue();
+        do {
+            System.out.print("Year: ");
+            year = InputHandler.getPositiveIntegerInput();
+            if(year < 1900 || year > currentYear) System.out.println("Year cannot be later than current year or sooner than 1900 (1900 - " + currentYear + ")");
+        } while (year < 1900 || year > currentYear);
+
+        do {
+            System.out.print("Month: ");
+            month = InputHandler.getPositiveIntegerInput();
+            if(month < 1 || month > 12) System.out.println("Month must be (01-12)");
+        } while (month < 1 || month > 12);
+
+        String paymentId = Payment.createId(emp.getId(), month, year);
+
+        // Check if payment existed
+        boolean isExist = payments.stream().anyMatch(p -> paymentId.equals(p.getPaymentId()));
+        if(isExist) {
+            System.out.println("You already pay " + emp.getName() + " this month");
+            return;
+        }
+
+        // If payment doesnt exist
+        int workHours;
+        do {
+            System.out.print("Hours " + emp.getName() + " has worked (hourly rate $" + emp.getHourlyRate() +"): ");
+            workHours = InputHandler.getPositiveIntegerInput();
+            if(workHours < 1 || workHours > 160) System.out.println("Work hours must me (1 - 160)");
+        } while (workHours < 1 || workHours > 160);
+
+        // All goods
         int salary = emp.getHourlyRate() * workHours;
         System.out.println("Salary of " + emp.getName() + " this month is: $" + salary);
+
+        Payment payment = new Payment();
+        payment.setPaymentId(paymentId);
+        payment.setWorkHours(workHours);
+        payment.setHourlyRate(emp.getHourlyRate());
+        payment.setSalary(salary);
+
+        payments.add(payment);
+        FileHandler.writePayments(payments);
+        System.out.println("Payment for " + emp.getName() + " on " + month + "/" + year + " is created");
     }
 
     static void handleShowListEmployees() {
         employees.forEach(System.out::println);
     }
 
+    static void handleShowPaymentHistory() {
+        int inpId;
+        Employee emp = null;
+
+        // Keep asking till user input a valid user id
+        do {
+            System.out.print("Input user's id: ");
+            inpId = InputHandler.getPositiveIntegerInput();
+            for (Employee e : employees) {
+                if(e.getId() == inpId) {
+                    emp = e;
+                    break;
+                }
+            }
+            if(emp == null) System.out.println("Cannot find any employee with id: " + inpId);
+        } while(emp == null);
+
+        // Found employee
+        int finalInpId = inpId;
+        List<Payment> empPayments = payments.stream().filter(p -> p.getPaymentId().startsWith("" + finalInpId)).collect(Collectors.toList());
+
+        if(empPayments.size() < 1) {
+            System.out.println(emp.getName() + " did not have any salary history");
+            return;
+        }
+        System.out.println(emp.getName() + " salary history: ");
+        empPayments.forEach(p -> {
+            String[] splittedId = p.getPaymentId().split("_");
+            String date = splittedId[1];
+            // Add '/' into date
+            date = date.substring(0, 2) + "/" + date.substring(2);
+            System.out.println("********************");
+            System.out.println(date);
+            System.out.println("Salary: $" + p.getSalary());
+            System.out.println("Work hours: " + p.getWorkHours());
+            System.out.println("Hourly rate: " + p.getHourlyRate());
+            System.out.println("********************");
+        });
+    }
+
     static void handleExit() {
         System.out.println("Saving data...");
         FileHandler.writeEmployees(employees);
+        FileHandler.writePayments(payments);
         System.out.println("Done, bye bye");
     }
 

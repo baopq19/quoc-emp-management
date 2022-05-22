@@ -1,11 +1,9 @@
 package com.quocvuong.utils;
 
 import com.quocvuong.model.Employee;
+import com.quocvuong.model.Payment;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,9 +23,13 @@ public class FileHandler {
     public static List<Employee> readEmployees() {
         List<Employee> employees = new ArrayList<>();
         try {
-            FileReader fileReader = new FileReader(Constant.EMPLOYEE_FILE_PATH);
+            File file = new File(Constant.EMPLOYEE_FILE_PATH);
+            if(!file.exists()) {
+                file.createNewFile();
+            }
+            FileReader fileReader = new FileReader(file);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
-            String line = "";
+            String line;
 
             while((line = bufferedReader.readLine()) != null) {
                 Employee emp = new Employee();
@@ -46,5 +48,46 @@ public class FileHandler {
             e.printStackTrace();
         }
         return employees;
+    }
+
+    public static void writePayments(List<Payment> payments) {
+        try {
+            FileWriter fileWriter = new FileWriter(Constant.PAYMENT_FILE_PATH);
+            String paymentString = payments.stream().map(Payment::toSaveString).collect(Collectors.joining("\n"));
+            fileWriter.write(paymentString);
+            fileWriter.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static List<Payment> readPayments() {
+        List<Payment> payments = new ArrayList<>();
+        try {
+            File file = new File(Constant.PAYMENT_FILE_PATH);
+            if(!file.exists()) {
+                file.createNewFile();
+            }
+            FileReader fileReader = new FileReader(file);
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            String line;
+
+            while((line = bufferedReader.readLine()) != null) {
+                Payment payment = new Payment();
+                String[] paymentProps = line.split(",");
+
+                payment.setPaymentId(paymentProps[0]);
+                payment.setHourlyRate(Integer.parseInt(paymentProps[1]));
+                payment.setWorkHours(Integer.parseInt(paymentProps[2]));
+                payment.setSalary(Integer.parseInt(paymentProps[3]));
+                payments.add(payment);
+            }
+
+            bufferedReader.close();
+            fileReader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return payments;
     }
 }

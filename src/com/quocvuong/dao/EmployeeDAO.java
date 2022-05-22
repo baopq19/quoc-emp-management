@@ -13,6 +13,4 @@ public class EmployeeDAO {
         emp.setId(newId);
         employees.add(emp);
     }
-
-
 }
